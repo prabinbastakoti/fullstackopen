@@ -1,66 +1,19 @@
-import axios from "axios";
+import phonebook from "./services/phonebook";
+
 import { useState, useEffect } from "react";
 
-const Filter = ({ persons, filter, handleChange }) => {
-  return (
-    <>
-      <div>
-        filter shown with <input value={filter} onChange={handleChange} />
-      </div>
-      {filter.length > 0 ? (
-        <>
-          <h2>Filtered Numbers</h2>
-          {persons
-            .filter(
-              (person) => person.name.toLowerCase() === filter.toLowerCase()
-            )
-            .map((item) => (
-              <h4 key={item.id}>
-                {item.name} {item.number}
-              </h4>
-            ))}
-        </>
-      ) : null}
-    </>
-  );
-};
+import Filter from "./components/Filter";
 
-const Form = (props) => {
-  const handleSubmit = props.handleSubmit;
-  const newName = props.newName;
-  const newNum = props.newNum;
-  const handleNoteChange = props.handleNoteChange;
-  const handleNumberChange = props.handleNumberChange;
+import Form from "./components/Form";
 
-  return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        name: <input value={newName} onChange={handleNoteChange} />
-      </div>
-      <div>
-        number: <input value={newNum} onChange={handleNumberChange} />
-      </div>
-      <div>
-        <button type="submit">add</button>
-      </div>
-    </form>
-  );
-};
-
-const Persons = ({ persons }) => {
-  return persons.map((person) => (
-    <h4 key={person.name}>
-      {person.name} {person.number}
-    </h4>
-  ));
-};
+import Persons from "./components/Persons";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:3001/persons").then((response) => {
-      setPersons(response.data);
+    phonebook.getAll().then((initialData) => {
+      setPersons(initialData);
     });
   }, []);
 
@@ -82,9 +35,11 @@ const App = () => {
         id: persons.length + 1,
       };
 
-      setPersons([...persons].concat(newObject));
-      setNewName("");
-      setNewNum("");
+      phonebook.create(newObject).then((newNoteReturned) => {
+        setPersons(persons.concat(newNoteReturned));
+        setNewName("");
+        setNewNum("");
+      });
     }
   };
 
@@ -98,6 +53,20 @@ const App = () => {
 
   const newFilter = (e) => {
     setFilter(e.target.value);
+  };
+
+  const handleRemove = (id) => {
+    if (window.confirm(`Delete ${persons[id - 1].name}?`)) {
+      phonebook
+        .removePhone(id)
+        .then(() => {
+          phonebook
+            .getAll()
+            .then((response) => setPersons(response))
+            .catch((error) => console.log(error));
+        })
+        .catch((error) => console.log(error));
+    }
   };
 
   return (
@@ -117,7 +86,7 @@ const App = () => {
       />
       <h2>Numbers</h2>
 
-      <Persons persons={persons} />
+      <Persons persons={persons} remove={handleRemove} />
     </div>
   );
 };
