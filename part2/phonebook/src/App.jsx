@@ -27,7 +27,21 @@ const App = () => {
     const exist = persons.filter((person) => person.name === newName);
 
     if (exist.length > 0) {
-      alert(`${newName} is already in phonebook`);
+      if (
+        window.confirm(
+          `${newName} is already added to the phonebook,replace the old number with a new one? `
+        )
+      ) {
+        const contact = persons.find((person) => person.name === newName);
+        const index = contact.id;
+        const changedContact = { ...contact, number: newNum };
+
+        phonebook.update(index, changedContact).then((response) => {
+          setPersons(
+            persons.map((person) => (person.id !== index ? person : response))
+          );
+        });
+      }
     } else {
       const newObject = {
         name: newName,
@@ -56,7 +70,8 @@ const App = () => {
   };
 
   const handleRemove = (id) => {
-    if (window.confirm(`Delete ${persons[id - 1].name}?`)) {
+    const currentItem = persons.find((person) => person.id === id);
+    if (window.confirm(`Delete ${currentItem.name}?`)) {
       phonebook
         .removePhone(id)
         .then(() => {
