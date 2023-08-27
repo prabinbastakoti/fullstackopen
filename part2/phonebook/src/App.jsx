@@ -20,6 +20,8 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newNum, setNewNum] = useState("");
   const [filter, setFilter] = useState("");
+  const [message, setMessage] = useState("");
+  const [err, setError] = useState("");
 
   const addNote = (e) => {
     e.preventDefault();
@@ -36,11 +38,32 @@ const App = () => {
         const index = contact.id;
         const changedContact = { ...contact, number: newNum };
 
-        phonebook.update(index, changedContact).then((response) => {
-          setPersons(
-            persons.map((person) => (person.id !== index ? person : response))
-          );
-        });
+        phonebook
+          .update(index, changedContact)
+          .then((response) => {
+            setPersons(
+              persons.map((person) => (person.id !== index ? person : response))
+            );
+            renderMessage(
+              `Updated ${changedContact.name} phone number to ${changedContact.number}`
+            );
+
+            setTimeout(() => {
+              renderMessage("");
+            }, 5000);
+          })
+          .catch((err) => {
+            renderError(
+              `Information of ${newName} has already removed from server`
+            );
+            setTimeout(() => {
+              renderError("");
+            }, 5000);
+            phonebook.getAll().then((response) => setPersons(response));
+          });
+
+        setNewName("");
+        setNewNum("");
       }
     } else {
       const newObject = {
@@ -54,6 +77,11 @@ const App = () => {
         setNewName("");
         setNewNum("");
       });
+      renderMessage(`Added ${newName} to the phonebook`);
+
+      setTimeout(() => {
+        renderMessage("");
+      }, 5000);
     }
   };
 
@@ -84,6 +112,14 @@ const App = () => {
     }
   };
 
+  const renderError = (msg) => {
+    setError(msg);
+  };
+
+  const renderMessage = (msg) => {
+    setMessage(msg);
+  };
+
   return (
     <div>
       <h2>Phonebook</h2>
@@ -99,6 +135,8 @@ const App = () => {
         handleNoteChange={newNote}
         handleNumberChange={newNumber}
       />
+      {message ? <h1 className="message">{message}</h1> : null}
+      {err ? <h1 className="error">{err}</h1> : null}
       <h2>Numbers</h2>
 
       <Persons persons={persons} remove={handleRemove} />
