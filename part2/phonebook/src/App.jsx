@@ -72,16 +72,24 @@ const App = () => {
         id: persons.length + 1,
       };
 
-      phonebook.create(newObject).then((newNoteReturned) => {
-        setPersons(persons.concat(newNoteReturned));
-        setNewName("");
-        setNewNum("");
-      });
-      renderMessage(`Added ${newName} to the phonebook`);
-
-      setTimeout(() => {
-        renderMessage("");
-      }, 5000);
+      phonebook
+        .create(newObject)
+        .then((newNoteReturned) => {
+          setPersons(persons.concat(newNoteReturned));
+          setNewName("");
+          setNewNum("");
+          renderMessage(`Added ${newName} to the phonebook`);
+          setTimeout(() => {
+            renderMessage("");
+          }, 5000);
+        })
+        .catch((error) => {
+          const errorMsg = error.response.data.error;
+          renderError(errorMsg);
+          setTimeout(() => {
+            renderError("");
+          }, 5000);
+        });
     }
   };
 
